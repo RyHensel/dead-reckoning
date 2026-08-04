@@ -1,22 +1,20 @@
 # Dead Reckoning
 
-**Backup and index-integrity monitor for ArcGIS Pro projects.**
+**Backup and index-integrity analyzer for ArcGIS Pro projects.**
 
-Detects the silent `Index.json` corruption that makes every map in an `.aprx`
-fail to open, keeps dated snapshots tagged with each project's health at the
-time of backup, and repairs broken projects without touching the original file.
+This tool detects `Index.json` corruption that can make every map and table
+in an `.aprx` fail to open, keeps dated snapshots tagged with each project's 
+health at the time of backup, and repairs broken projects without touching 
+the original file.
 
-Named for the navigational method of recovering your position from the last
-known good fix, which is what this does for an `.aprx`.
-
-Single file. No third-party packages. Python 3.9+. Windows. `arcpy` is optional
-and only needed for `.mapx` export.
+No third-party packages. Python 3.9+. Windows. `arcpy` is optional
+and only needed for the `.mapx` export option.
 
 ---
 
-## Does this apply to me?
+## How to know if this will help you
 
-If you have hit any of the following, yes:
+If you have experienced the following:
 
 - Maps are listed in the Catalog pane but **none of them will open**
 - No error dialog, no crash, no exception — the project just doesn't work
@@ -24,8 +22,6 @@ If you have hit any of the following, yes:
 - The project opened fine yesterday and you changed nothing structural
 - Opening the `.aprx` as a ZIP shows `Index.json` containing values like
   `"NumberOfNodes" : 1,376`
-
-That last one is the tell. Everything below explains it.
 
 ---
 
@@ -106,7 +102,7 @@ double-click it.
 In the window:
 
 1. **PROJECTS** — press `Add…` and pick the folder holding your `.aprx` files.
-   Repeatable; add as many roots as you like. Subfolders are searched by default.
+   Subfolders are searched by default.
 2. **BACKUPS** — press `Set…` and pick where snapshots go.
 3. Press **Scan now**.
 
@@ -126,15 +122,12 @@ can actually read.
 
 ## 3. Reading the dashboard
 
-Four tiles across the top, then one row per project, sorted worst-first so
-anything needing attention is at the top.
-
 ### Status
 
 | Status | Meaning | Action |
 |---|---|---|
 | **Healthy** | `Index.json` parses, child ids consistent | None |
-| **Suspect** | Parses, but something is off — see below | Usually none; see the two cases |
+| **Suspect** | Parses, but something might be bad — see below | Usually none; see the two cases |
 | **Broken** | `Index.json` will not parse | Press **Repair**, then Save As in Pro |
 | **Locked** | File in use, almost always open in Pro | Close Pro and rescan |
 
@@ -156,9 +149,9 @@ the signature of comma-split ids.
 ### Last 6 runs
 
 Six small bars, oldest left, newest right, colored by that project's status on
-each of the last six backup runs. Empty slots on the left until enough history
-accumulates. Five greens then an amber tells you *when* something turned, which
-tells you which snapshot to restore from.
+each of the last six backup runs. Empty slots on the left will fill as you do runs.
+Five greens then an amber tells you *when* something changed, which
+can indicate which snapshot to restore from.
 
 ### Row buttons
 
@@ -552,9 +545,7 @@ The most useful contributions, roughly in order:
    which version changed them would be valuable.
 4. **Bug fixes and platform fixes**, as pull requests.
 
-Keep the zero-dependency, single-file design. That constraint is what makes the
-tool droppable into a locked-down GIS workstation without a package install
-request.
+
 
 ---
 
