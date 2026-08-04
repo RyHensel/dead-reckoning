@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Local tool state — never commit; contains your own paths
+config.json
+_deadreckoning/
+snapshots/
+archives/
+*.log
+
+# ArcGIS artifacts that should never land in a repo
+*.aprx
+*.mapx
+*.gdb/
+*.lock
+*.sde
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.swp
