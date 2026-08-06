@@ -27,7 +27,7 @@ If you have experienced the following:
 
 ## Contents
 
-1. [The failure this catches](#1-the-failure-this-catches)
+1. [The failure this works on](#1-the-failure-this-works-on)
 2. [Install and first run](#2-install-and-first-run)
 3. [Reading the dashboard](#3-reading-the-dashboard)
 4. [Running a backup](#4-running-a-backup)
