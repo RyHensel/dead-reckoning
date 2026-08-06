@@ -35,42 +35,36 @@ If you have experienced the following:
 6. [Restoring](#6-restoring)
 7. [Repairing a broken project](#7-repairing-a-broken-project)
 8. [Retention](#8-retention)
-9. [Themes and customization](#9-themes-and-customization)
-10. [Command line and scheduling](#10-command-line-and-scheduling)
-11. [The .mapx option](#11-the-mapx-option)
-12. [What gets scanned, and what doesn't](#12-what-gets-scanned-and-what-doesnt)
-13. [Performance notes](#13-performance-notes)
-14. [Troubleshooting](#14-troubleshooting)
-15. [Habits worth keeping](#15-habits-worth-keeping)
-16. [Support and scope](#16-support-and-scope)
-17. [Contributing](#17-contributing)
-18. [License](#18-license)
+9. [Command line and scheduling](#10-command-line-and-scheduling)
+10. [The .mapx option](#11-the-mapx-option)
+11. [What gets scanned, and what doesn't](#12-what-gets-scanned-and-what-doesnt)
+12. [Performance notes](#13-performance-notes)
+13. [Troubleshooting](#14-troubleshooting)
+14. [A good idea](#14-a-good-idea)
+15. [Support and scope](#16-support-and-scope)
+16. [Contributing](#17-contributing)
+17. [License](#18-license)
 
 ---
 
-## 1. The failure this catches
+## 1. The failure this works on:
 
-An `.aprx` is a ZIP archive containing CIM documents plus `Index.json`, a
-lookup table mapping internal `CIMPATH=` references to entries in the archive.
+An `.aprx` is a ZIP archive containing project required files plus `Index.json`
+that has `CIMPATH=` references to entries in the archive.
 
-If `Index.json` is written with culture-aware number formatting, values above
+If `Index.json` is written with number formatting for humans, values above
 999 get thousands separators — `"NumberOfNodes" : 1,376` — which is not valid
-JSON. ArcGIS Pro then cannot parse its own index. The failure is silent: maps
-still appear in the Catalog pane but none of them will open, and Diagnostic
-Monitor shows the lookup completing in 0 ms with no exception raised.
+JSON. ArcGIS Pro then cannot understand its own index. Maps still appear in the
+Catalog pane but none of them will open, and Diagnostic Monitor shows the lookup 
+completing in 0 ms with no exception raised.
 
-Two things follow from that:
+I think that:
 
 - The corruption happens **at save time**, and you find out the next time you
   open the project. A single rolling backup would overwrite your last good copy
   before you knew anything was wrong.
-- The defect is **detectable in seconds** by parsing `Index.json` outside of
-  Pro, which is what this tool does on every scan.
-
-Utility network rules — connectivity, containment, attribute rules, subnetwork
-definitions — live in the enterprise geodatabase, not the `.aprx`, and are not
-at risk from this failure. What the `.aprx` holds is maps, layers, symbology,
-popups, labeling, layouts, and stored table views.
+- The defect is **detectable** by parsing `Index.json` outside of Pro, which is
+  what this tool does on every scan.
 
 ### What the tool does
 
@@ -79,9 +73,9 @@ popups, labeling, layouts, and stored table views.
 3. Copies each project into a timestamped snapshot, tagging the filename
    `OK`, `WARN`, or `BROKEN`
 4. Bundles the snapshot into a single `.zip`
-5. Prunes old snapshots according to a retention setting
+5. Cleans out old snapshots according to a retention setting
 6. Optionally exports every map to `.mapx` (needs `arcpy`)
-7. Repairs a corrupt `.aprx` by writing a new, corrected file
+7. Doesn't really repair a corrupt `.aprx` but writes a new, corrected file
 
 ---
 
@@ -110,13 +104,9 @@ Settings save automatically to `%APPDATA%\DeadReckoning\config.json`.
 
 **On choosing a destination.** If you put the backup folder inside a project
 folder, the tool warns you once and then excludes it from scanning so it still
-works. But a backup on the same share as the original only protects you from
-file corruption, not from losing the share. Consider periodically copying a zip
+works. But a backup on the same folder as the original only protects you from
+file corruption, not from any data loss of that folder. Consider periodically copying a zip
 to a different drive.
-
-**On choosing a source.** Point it at the folders holding live projects rather
-than at a broad root. A narrower source means faster scans and a dashboard you
-can actually read.
 
 ---
 
@@ -284,72 +274,34 @@ python dead_reckoning.py --repair "C:\Projects\YourProject.aprx"
 
 It strips thousands separators from numeric values in `Index.json`, confirms
 the result parses, and writes `<n>_repaired_<timestamp>.aprx` next to the
-original. **The source file is never modified.**
+original. **The source file not modified.**
 
 Then open the repaired file, confirm all maps load, and immediately **Save As**
 to a new project so Pro regenerates `Index.json` from its in-memory model.
 
-The scripted repair fixes the numeric literals but cannot recover the
-`ChildNodeIds` strings, because a comma inside a delimited id list is
-indistinguishable from a delimiter. Only Pro can rebuild those. **The tool will
-keep flagging the repaired file as Suspect until you do that rebuild.** That is
-correct behavior, not a false positive.
-
+The repair fixes the numeric literals but cannot recover the `ChildNodeIds` strings, 
+because a comma inside a delimited id list is indistinguishable from a delimiter. 
+I think that only Pro can rebuild those. **The tool will keep flagging the repaired 
+file as Suspect until you do that rebuild.** Feel free to modify code if you want
+different behavior.
 ---
 
 ## 8. Retention
 
-The **KEEP** box sets how many snapshots to retain. Default for a fresh config
-is 7.
+The **KEEP** box sets how many snapshots to retain. Default for a fresh tool
+download is 7.
 
-Retention applies at the end of every run: it lists snapshot folders and
+This applies at the end of every run: it lists snapshot folders and
 archive zips, sorts by date, and deletes everything older than the newest N. So
-lowering KEEP from 30 to 5 means the next run deletes 25 of them. No separate
-cleanup step, and disk usage plateaus instead of growing.
+lowering KEEP from 30 to 5 means the next run deletes 25 of them. There is no separate
+cleanup step.
 
-Pruning is date-ordered only. It does not preserve the oldest known-good
+Pruning is date-ordered only. It does **not** preserve the oldest known-good
 snapshot. **For a long-term archive, move a zip out of `archives\` into a folder
-of your own** — anything outside the destination tree is never touched.
-
-Sizing: with weekly runs, 5 snapshots is roughly five weeks of history. In the
-environment this was written for, the defect surfaced three times in four
-years, so that window comfortably covers "I broke it and noticed the next
-morning" while a manually-kept archive copy covers the rare case.
+of your own** - anything outside the destination tree is not touched. More work
+on this functionality is welcome.
 
 ---
-
-## 9. Themes and customization
-
-Two themes, cycled by the **Theme** button and persisted to config:
-
-- **Slate** — rounded panels, purple accent, mixed case labels
-- **Console** — graphite background, teal accent, sharp 2px panels with hairline
-  borders, uppercase section labels, thin progress bar
-
-Everything visual lives in the `THEMES` dict near the top of the file:
-
-```python
-"console": {
-    "bg": "#141619",              # window background
-    "panel": "#1c1f24",           # card background
-    "panel_hi": "#242830",        # buttons
-    "border": "#2f353d",          # hairlines, empty meter track
-    "text": "#d7dce1",
-    "muted": "#79828d",
-    "accent": "#3fb2c4",          # progress bar, running state
-    "ok": "#4aa96c",              # Healthy
-    "warn": "#d99b3c",            # Suspect
-    "err": "#d95f5f",             # Broken
-    "idle": "#5a616b",            # Locked
-    "caption": "#0f1113",         # title bar background
-    "caption_text": "#3fb2c4",    # title bar text
-    "caption_border": "#2f353d",  # window border
-    "radius": 2,                  # corner radius; <= 3 draws sharp rectangles
-    "upper": True,                # uppercase section labels
-    "bar": 6,                     # progress bar thickness in px
-    "rule": True,                 # outline panels
-},
-```
 
 Change a hex value, save, relaunch. Add a third theme by copying a block and
 giving it a new key — the Theme button cycles through whatever is in the dict.
@@ -369,7 +321,7 @@ column means adjusting that one block.
 
 ---
 
-## 10. Command line and scheduling
+## 9. Command line and scheduling
 
 ```
 python dead_reckoning.py                       # GUI
@@ -399,28 +351,28 @@ Exit codes:
 5. Settings → uncheck "Stop the task if it runs longer than" if `.mapx` export
    is on.
 
-Configure once in the GUI first; headless mode reads the same config file.
+Configure once in the GUI first because headless mode reads the same config file.
 
-Any Python 3.9+ works. Pro's bundled interpreter is only required for `.mapx`
-export.
+Any Python 3.9+ works and Pro's interpreter is only required for `.mapx` export.
 
 ---
 
-## 11. The .mapx option
+## 10. The .mapx option
 
-Off by default; slow and needs a license checkout. When enabled, every map in
-each healthy project is exported to `.mapx` beside its backup copy.
+Off by default because it can be slow and needs a license from Pro. 
+When enabled, every map in each healthy project is exported to `.mapx` 
+alongside its backup copy.
 
 A `.mapx` carries layers, grouping, draw order, symbology, labeling and popup
-configuration, and does not depend on a project index resolving — so it survives
+configuration, and does not depend on a project index resolving, so it survives
 this entire failure class. Worth enabling on an occasional run even if you leave
 it off normally.
 
-The export runs against the backup copy, never your working file.
+The export runs against the backup copy, not the original file found in the scan.
 
 ---
 
-## 12. What gets scanned, and what doesn't
+## 11. What gets scanned, and what doesn't
 
 Skipped by default:
 
@@ -434,36 +386,29 @@ Skipped by default:
 Exclusions are plain substring matches against folder and file names, editable
 under `exclude_patterns` in `%APPDATA%\DeadReckoning\config.json`.
 
-The destination subtree is pruned during the walk rather than filtered
-afterwards. Without that, every run would walk every previous snapshot, getting
-slower each week.
+The destination subtree is pruned during the selected file walk because without
+that, every run would walk every previous snapshot, getting slightly slower
+each time.
 
 ---
 
-## 13. Performance notes
+## 12. Performance notes
 
-The bottleneck is network latency, not CPU.
+**Inspection runs 8 in parallel.** Each project is two small reads out of a ZIP.
+Change `max_workers` in `scan_worker()` if you want a different number.
 
-**Inspection runs 8 in parallel.** Each project is two small reads out of a ZIP
-and the machine is idle waiting on the share, so running several in flight cuts
-wall time roughly in proportion to the pool size. Change `max_workers` in
-`scan_worker()` if you want a different number.
-
-**Bundling uses `ZIP_STORED`, not deflate.** An `.aprx` is already a
-deflate-compressed ZIP, so recompressing it burns time for essentially zero size
-reduction.
+**Bundling uses `ZIP_STORED`, not deflate.**
 
 **The folder walk can't have a percentage** — the file count isn't known until
 the walk finishes. It shows a marquee plus live counts
 (`Searching — 450 folders, 96 projects so far…`) instead.
 
-**Copying is deliberately serial.** Progress is visible and per-file, and
-failures are attributable to a specific file. Parallel copying would gain less
-than parallel inspection anyway, since SMB throughput caps it.
+**Copying is serial.** Progress is visible and per-file, and
+failures are attributable to a specific file. 
 
 ---
 
-## 14. Troubleshooting
+## 13. Troubleshooting
 
 **A dialog is open and no buttons respond.** tkinter dialogs are modal. Dismiss
 it and the window comes back.
@@ -490,15 +435,9 @@ worth reporting.
 
 ---
 
-## 15. Habits worth keeping
+## 14. A good idea
 
-1. **Close COGO Reader before saving.** Both observed incidents had it open at
-   save. The corruption lands in the node index, which is what tracks open panes
-   and table views. Same goes for attribute tables.
-2. **Turn on Pro's own backup interval** — Options → Application → General.
-3. **Do a restore drill occasionally.** An untested backup is a hypothesis. Ten
-   minutes now beats finding out during an incident.
-4. **Keep a copy of any broken project you encounter.** A genuinely corrupt
+**Keep a copy of any broken project you encounter.** A genuinely corrupt
    `.aprx` paired with a known-good one is the best validation set there is:
    point `--check` at both and confirm the broken one reports its separator hits
    and parse failure while the good one reads Healthy. If you are willing to
@@ -506,7 +445,7 @@ worth reporting.
 
 ---
 
-## 16. Support and scope
+## 15. Support and scope
 
 This is provided as-is, with no warranty, under the MIT License. It was written
 to solve a specific problem in one production environment and is shared because
@@ -525,12 +464,11 @@ correct.
 
 Issues and questions are welcome, but this is maintained by one person alongside
 a full-time job. Responses may be slow or may not come at all. If it breaks for
-you and you fix it, a pull request is more likely to land than an issue is to
-get a fix written for you.
+you and you fix it, a pull request is more likely to achieve progress.
 
 ---
 
-## 17. Contributing
+## 16. Contributing
 
 The most useful contributions, roughly in order:
 
@@ -549,6 +487,6 @@ The most useful contributions, roughly in order:
 
 ---
 
-## 18. License
+## 17. License
 
 MIT. See [LICENSE](LICENSE).
