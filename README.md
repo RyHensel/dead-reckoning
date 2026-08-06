@@ -17,7 +17,7 @@ and only needed for the `.mapx` export option.
 If you have experienced the following:
 
 - Maps are listed in the Catalog pane but **none of them will open**
-- No error dialog, no crash, no exception — the project just doesn't work
+- No error dialog, no crash, no exception and the project just doesn't work
 - Diagnostic Monitor shows the map lookup completing in **0 ms** with no failure
 - The project opened fine yesterday and you changed nothing structural
 - Opening the `.aprx` as a ZIP shows `Index.json` containing values like
@@ -53,7 +53,7 @@ An `.aprx` is a ZIP archive containing project required files plus `Index.json`
 that has `CIMPATH=` references to entries in the archive.
 
 If `Index.json` is written with number formatting for humans, values above
-999 get thousands separators — `"NumberOfNodes" : 1,376` — which is not valid
+999 get thousands separators: `"NumberOfNodes" : 1,376` which is not valid
 JSON. ArcGIS Pro then cannot understand its own index. Maps still appear in the
 Catalog pane but none of them will open, and Diagnostic Monitor shows the lookup 
 completing in 0 ms with no exception raised.
@@ -95,9 +95,9 @@ double-click it.
 
 In the window:
 
-1. **PROJECTS** — press `Add…` and pick the folder holding your `.aprx` files.
+1. **PROJECTS**: press `Add…` and pick the folder holding your `.aprx` files.
    Subfolders are searched by default.
-2. **BACKUPS** — press `Set…` and pick where snapshots go.
+2. **BACKUPS**: press `Set…` and pick where snapshots go.
 3. Press **Scan now**.
 
 Settings save automatically to `%APPDATA%\DeadReckoning\config.json`.
@@ -117,7 +117,7 @@ to a different drive.
 | Status | Meaning | Action |
 |---|---|---|
 | **Healthy** | `Index.json` parses, child ids consistent | None |
-| **Suspect** | Parses, but something might be bad — see below | Usually none; see the two cases |
+| **Suspect** | Parses, but something might be bad: see below | Usually none; see the two cases |
 | **Broken** | `Index.json` will not parse | Press **Repair**, then Save As in Pro |
 | **Locked** | File in use, almost always open in Pro | Close Pro and rescan |
 
@@ -131,7 +131,7 @@ Suspect covers two different situations:
 
 ### The integrity meter
 
-The bar is highest child id divided by node count. Near full is normal — a
+The bar is highest child id divided by node count. Near full is normal and a
 clean index typically shows the highest child one below the node count, e.g.
 `child 906 / 907 nodes`. A short bar on a project with more than 999 nodes is
 the signature of comma-split ids.
@@ -145,19 +145,19 @@ can indicate which snapshot to restore from.
 
 ### Row buttons
 
-- **Restore** — versions of this one project across snapshots. See §6.
-- **Details** — full findings: node counts, separator hits, parse error
+- **Restore**: versions of this one project across snapshots. See §6.
+- **Details**: full findings: node counts, separator hits, parse error
   location, map and item counts.
-- **Repair** — replaces Details, in red, when a project is genuinely broken.
+- **Repair**: replaces Details, in red, when a project is genuinely broken.
 
 ### Status area
 
-Bottom left shows the current state — `● READY`, `● SCANNING`,
-`● BACKUP RUNNING`, `● BACKUP COMPLETE`, `● CANCELLING` — with a monospace
+Bottom left shows the current state: `● READY`, `● SCANNING`,
+`● BACKUP RUNNING`, `● BACKUP COMPLETE`, `● CANCELLING` with a monospace
 counter on the right and a full-sentence result below.
 
 Completion messages always name the operation. A backup ends with
-`Backup 2026-08-04_0815 — 3 projects copied, 0 skipped…`, never a bare
+`Backup 2026-08-04_0815 - 3 projects copied, 0 skipped…`, never a bare
 "complete", so the automatic dashboard refresh that follows a backup can't be
 mistaken for the backup's own result.
 
@@ -167,8 +167,8 @@ mistaken for the backup's own result.
 
 Press **Back up all**. The run has two phases, each with its own progress bar:
 
-1. `copying · <n>` — inspects and copies each project
-2. `bundling · <n>` — packs the snapshot into a zip
+1. `copying · <n>` inspects and copies each project
+2. `bundling · <n>` packs the snapshot into a zip
 
 Before copying starts, the status line reports the estimated payload, e.g.
 `Payload 1.42 GB per snapshot · roughly 7.1 GB once 5 snapshots accumulate`.
@@ -181,7 +181,7 @@ can never push out a good snapshot. Files already copied are kept. Partial runs
 are capped at the two most recent.
 
 Cancel works during the folder walk and during bundling too. If bundling is
-interrupted, the incomplete zip is deleted but the snapshot folder is kept —
+interrupted, the incomplete zip is deleted but the snapshot folder is kept and
 every file was already copied and verified at that point.
 
 Projects open in ArcGIS Pro are reported as **Locked** and skipped rather than
@@ -211,12 +211,11 @@ copied mid-write.
 **The `OK` / `WARN` / `BROKEN` suffix is the point.** When you need to restore
 you don't have to guess which snapshot predates the corruption.
 
-**Folder structure is mirrored, not flattened.** Projects sharing a filename
-are common — three copies of a tracker in different folders — and flattening
-would silently overwrite two of them. Paths are stored relative to whichever
-source root you configured, so the same project can appear at different depths
-in snapshots taken with different source settings. That's cosmetic; version
-matching keys off the original absolute path recorded in `manifest.json`.
+**Folder structure is mirrored but is not flattened.** 
+Paths are stored relative to whichever source root you configured, so the same 
+project can appear at different depths in snapshots taken with different source
+settings. That's cosmetic; version matching keys off the original absolute path 
+recorded in `manifest.json`.
 
 **Modification times are preserved.** A restored file shows the date the
 project was genuinely last edited, not the date it was copied. The
@@ -224,7 +223,7 @@ project was genuinely last edited, not the date it was copied. The
 
 **`snapshots\` versus `archives\`.** The snapshot folders are the working
 restore points and are what the Restore button reads. The zips are the portable
-copy — drag one off to long-term storage. If you uncheck **Keep loose copies**,
+copy. Drag one off to long-term storage. If you uncheck **Keep loose copies**,
 snapshot folders are deleted after bundling and Restore will report no
 snapshots found. Leave it checked unless you have a reason not to.
 
@@ -232,9 +231,7 @@ snapshots found. Leave it checked unless you have a reason not to.
 
 ## 6. Restoring
 
-Two ways in:
-
-**Per project — the usual case.** Press **Restore** on a row. You get that one
+**Per project is the usual case.** Press **Restore** on a row. You get that one
 project's versions across snapshots, newest first:
 
 ```
@@ -304,7 +301,7 @@ on this functionality is welcome.
 ---
 
 Change a hex value, save, relaunch. Add a third theme by copying a block and
-giving it a new key — the Theme button cycles through whatever is in the dict.
+giving it a new key and the Theme button cycles through whatever is in the dict.
 
 The three `caption` keys use the Windows 11 DWM API and need build 22000 or
 later. On Windows 10, macOS, or Linux they silently do nothing and you get the
@@ -399,9 +396,9 @@ Change `max_workers` in `scan_worker()` if you want a different number.
 
 **Bundling uses `ZIP_STORED`, not deflate.**
 
-**The folder walk can't have a percentage** — the file count isn't known until
+**The folder walk can't have a percentage**: the file count isn't known until
 the walk finishes. It shows a marquee plus live counts
-(`Searching — 450 folders, 96 projects so far…`) instead.
+(`Searching - 450 folders, 96 projects so far…`) instead.
 
 **Copying is serial.** Progress is visible and per-file, and
 failures are attributable to a specific file. 
@@ -413,8 +410,8 @@ failures are attributable to a specific file.
 **A dialog is open and no buttons respond.** tkinter dialogs are modal. Dismiss
 it and the window comes back.
 
-**"The system cannot find the file specified" on a UNC path.** Should be fixed —
-paths are normalized on entry — but if you hand-edit `config.json`, use
+**"The system cannot find the file specified" on a UNC path.** Should be fixed and
+paths are normalized on entry but if you hand-edit `config.json`, use
 backslashes for UNC paths. `//server/share` is invalid to some Windows APIs.
 
 **Scan finds far more projects than expected.** The source root is too broad,
@@ -475,7 +472,7 @@ The most useful contributions, roughly in order:
 1. **Sample files.** A corrupt `.aprx` and a matching good one, with any
    sensitive layers or data source paths removed, is worth more than a bug
    report. Detection logic is only as good as its test cases.
-2. **Reports of the failure in the wild** — Pro version, what was open at save
+2. **Reports of the failure in the wild**: Pro version, what was open at save
    time, whether COGO Reader or an attribute table was involved. The root cause
    is understood; the trigger conditions are not fully mapped.
 3. **Key-name changes across Pro versions.** If `NumberOfNodes` or
